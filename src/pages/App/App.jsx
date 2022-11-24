@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import './App.css';
 import { getUser } from '../../utilities/users-service'
 import AuthPage from '../AuthPage/AuthPage'
-import WordlePage from '../WordlePage/WorldePage'
+import WordlePage from '../WordlePage/WordlePage'
 import NavBar from '../../components/NavBar/NavBar'
 
 export default function App() {

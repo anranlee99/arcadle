@@ -1,17 +1,15 @@
-// import WordBank from './wordBank.json'
+const WordBank = require('./wordBank.json')
 
-// export function getRandomWord() {
-//     const randomIndex = Math.floor(Math.random()*WordBank.length);
-//     return WordBank[randomIndex]
-// }
 
- const LetterState = {
-    Miss:'GREY',
-    Present:'YELLOW',
-    Match:'GREEN',
+
+export const LetterState = {
+    Miss:'bg-[#333334]',
+    Present:'bg-[#A8953F]',
+    Match:'bg-[#568049]',
 }
 
-function computeGuess(guess, answer){
+export function computeGuess(guess, answer){
+    
     const result = [];
     const guessArr = guess.split('');
     const answerArr = answer.split('');
@@ -48,3 +46,4 @@ function computeGuess(guess, answer){
     })
     return result;
 }
+
