@@ -10,21 +10,48 @@ const gameStateSchema = new Schema({
     record:{
         answer: {type:String, required: true, default: utils.getRandomWord()},
         numGuesses: {type: Number, default: 0},
-        guesses:{type: [String]}
+        guesses:[String]
     }
 }, {
     timestamps: true,
     toJSON: { virtuals: true }
 });
 
-gameStateSchema.statics.getGameState = function(userId) {
-    console.log('in static method')
-    
-    return this.findOneAndUpdate(
-        { user: userId, currentGame: true},
-        { user: userId},
-        { upsert: true, new: true }
-    )
+gameStateSchema.statics.getGameState = async function(userId) {  
+    const gameState = await this.findOne({user: userId, currentGame: true})
+    console.log('in getGameState',gameState)
+    if(gameState){
+        console.log('gamestate exists')
+        return gameState
+    } else {
+        const newGameState = new this({
+            user: userId,
+            currentGame: true,
+            gameType: 'Wordle',
+            record:{answer: utils.getRandomWord(), numGuesses:0, guesses:[]}
+        })
+        await newGameState.save()
+        return newGameState
+    }
+}
+
+gameStateSchema.methods.computeGuess = function(){
+    const currentGuess = this.record.guesses[this.record.guesses.length-1]
+    if(currentGuess === this.record.answer){
+        this.gameOver = true;
+    }
+    return utils.computeGuess(currentGuess, this.record.answer)
+}
+
+gameStateSchema.methods.addGuess = function(guess){
+    console.log('in addGuess Static',this, guess)
+    const gameState = this
+
+    gameState.record.guesses.push(guess)
+    gameState.computeGuess();
+    console.log('this after push ', this)
+    // return this.update(this)
+    return gameState.save()
 }
 
 module.exports = mongoose.model('GameState', gameStateSchema)
