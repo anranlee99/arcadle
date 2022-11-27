@@ -6,9 +6,10 @@ const gameStateSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     gameType: {type: String, required: true},
     gameOver: {type: Boolean, required: true, default: false},
+    victory: {type: Boolean, required: true, default: false},
     currentGame:{type:Boolean, required:true, default:true},
     record:{
-        answer: {type:String, required: true, default: utils.getRandomWord()},
+        answer: {type:String, required: true},
         numGuesses: {type: Number, default: 0},
         guesses:[String]
     }
@@ -28,7 +29,8 @@ gameStateSchema.statics.getGameState = async function(userId) {
             user: userId,
             currentGame: true,
             gameType: 'Wordle',
-            record:{answer: utils.getRandomWord(), numGuesses:0, guesses:[]}
+
+            record:{answer: utils.getRandomWord(), numGuesses:6, guesses:[]}
         })
         await newGameState.save()
         return newGameState
@@ -37,8 +39,11 @@ gameStateSchema.statics.getGameState = async function(userId) {
 
 gameStateSchema.methods.computeGuess = function(){
     const currentGuess = this.record.guesses[this.record.guesses.length-1]
-    if(currentGuess === this.record.answer){
+    if(this.record.guesses.length === this.record.numGuesses){
         this.gameOver = true;
+    } else if(currentGuess === this.record.answer){
+        this.gameOver = true;
+        this.victory = true;
     }
     return utils.computeGuess(currentGuess, this.record.answer)
 }
