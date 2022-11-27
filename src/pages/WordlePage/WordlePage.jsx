@@ -28,10 +28,13 @@ export default function WordlePage() {
         setMoves([...moves, guess])
         setGuess('')
     }
-    
+    async function newGame(){
+        await gameStateAPI.newGame();
+        window.location.reload(false);
+    }
     const rows = moves.concat(Array(GUESS_LENGTH-moves.length).fill(''))
     return (
-        <div className="mx-auto w-96">
+        <div className="mx-auto w-96 relative">
             <header className="border-b border-gray-500 pb-2 my-2">
                 <h1 className="text-4xl text-center ">Wordle</h1>
             </header>
@@ -45,6 +48,15 @@ export default function WordlePage() {
                 value={guess} maxLength={5}
                 onChange={e => setGuess(e.target.value)} />
             </form>
+            {
+                gameStateRef.current.gameOver && (
+                <div role='modal' className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto">
+                    Game Over!
+                    <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
+                        New Game
+                    </button>
+                </div>)
+            }
         </div>
     )
 }

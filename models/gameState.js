@@ -43,6 +43,12 @@ gameStateSchema.methods.computeGuess = function(){
     return utils.computeGuess(currentGuess, this.record.answer)
 }
 
+gameStateSchema.methods.newGame = async function(){
+    console.log('in new game model method')
+    this.currentGame = false;
+    await this.save();
+}
+
 gameStateSchema.methods.addGuess = function(guess){
     console.log('in addGuess Static',this, guess)
     const gameState = this
