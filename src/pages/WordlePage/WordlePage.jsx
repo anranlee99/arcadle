@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import "./WordlePage.css"
+import { validateGuess } from "../../components/GamesComponents/game-utils/word-utils";
 import * as gameStateAPI from '../../utilities/gameState-api';
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
 import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
@@ -11,6 +12,17 @@ export default function WordlePage() {
     const [guess, setGuess, addGuessLetter] = useGuess()
     const [answer, setAnswer] = useState('')
     const gameStateRef = useRef({});
+
+    const [showInvalidGuess, setInvalidGuess] = useState(false);
+
+    useEffect(() => {
+      let id: NodeJS.Timeout;
+      if (showInvalidGuess) {
+        id = setTimeout(() => setInvalidGuess(false), 10000);
+      }
+  
+      return () => clearTimeout(id);
+    }, [showInvalidGuess]);
 
     useEffect(function(){
         ( async function(){
@@ -24,11 +36,17 @@ export default function WordlePage() {
 
 
     async function addGuess(word){
-        console.log('line26',{word})
-        await gameStateAPI.addGuess(word)
-        gameStateRef.current = await gameStateAPI.getGameState()
-        console.log(gameStateRef.current)
-        setMoves([...moves, guess])
+
+        if(validateGuess(word)){
+            await gameStateAPI.addGuess(word)
+            
+            console.log(gameStateRef.current)
+            setMoves([...moves, guess])
+            gameStateRef.current = await gameStateAPI.getGameState()
+        } else {
+            setInvalidGuess(true)
+        }
+        
         setGuess('')
         window.location.reload(false);
     }
@@ -96,11 +114,27 @@ export default function WordlePage() {
 
     return (
         <div className="mx-auto w-96 relative">
+            {
+            showInvalidGuess ? 
+            <div
+                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
+                invalid guess!
+            </div> : ''
+            }
             <header className="border-b border-gray-500 pb-2 my-2">
                 <h1 className="page-title">Wordle</h1>
             </header>
             <main className='grid grid-rows-6 gap-4 my-4'>
-                {rows.map((row, idx)=>(<WordRow key={idx} letters={row} letterLength={5} answer={answer} currentGuess={idx===moves.length}/>))}
+                {rows.map((row, idx)=>(
+                    <WordRow 
+                        key={idx} 
+                        letters={row} 
+                        letterLength={5} 
+                        answer={answer} 
+                        currentGuess={idx===moves.length}
+
+                    />
+                ))}
                 
 
             </main>

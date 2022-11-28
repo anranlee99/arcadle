@@ -7,7 +7,9 @@ export const LetterState = {
     Present:'bg-[#A8953F]',
     Match:'bg-[#568049]',
 }
-
+export function validateGuess(word){
+    return WordBank.includes(word)
+}
 export function computeGuess(guess, answer){
     
     const result = [];
