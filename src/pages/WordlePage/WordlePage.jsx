@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import "./WordlePage.css"
 import * as gameStateAPI from '../../utilities/gameState-api';
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
 import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
@@ -7,7 +8,7 @@ const GUESS_LENGTH = 6;
 export default function WordlePage() {
     const [moves, setMoves] = useState([])
     // const [guess, setGuess] = useState('')
-    const [guess, setGuess] = useGuess()
+    const [guess, setGuess, addGuessLetter] = useGuess()
     const [answer, setAnswer] = useState('')
     const gameStateRef = useRef({});
 
@@ -36,7 +37,7 @@ export default function WordlePage() {
         const [guess, setGuess] = useState('');
         const previousGuess = usePrevious(guess)
         const WORD_LENGTH=5
-        function addGuessLetter (letter) {
+        const addGuessLetter = (letter) => {
             setGuess((curGuess) => {
             const newGuess =
                 letter.length === 1 && curGuess.length !== WORD_LENGTH
@@ -83,7 +84,7 @@ export default function WordlePage() {
                 addGuess(previousGuess)
             }
         }, [guess])
-        return [guess, setGuess];
+        return [guess, setGuess, addGuessLetter];
     }
 
     async function newGame(){
@@ -91,24 +92,19 @@ export default function WordlePage() {
         window.location.reload(false);
     }
     let rows = moves.length<6 ? moves.concat(guess) : moves;
-    // if(moves.length<6){
-    //     rows = moves.concat(guess)
-    // } else {
-    //     rows = moves
-    // }
     rows = rows.concat(Array(GUESS_LENGTH-rows.length).fill(''))
 
     return (
         <div className="mx-auto w-96 relative">
             <header className="border-b border-gray-500 pb-2 my-2">
-                <h1 className="text-4xl text-center ">Wordle</h1>
+                <h1 className="page-title">Wordle</h1>
             </header>
             <main className='grid grid-rows-6 gap-4 my-4'>
                 {rows.map((row, idx)=>(<WordRow key={idx} letters={row} letterLength={5} answer={answer} currentGuess={idx===moves.length}/>))}
                 
 
             </main>
-            <Keyboard />
+            <Keyboard addGuessLetter={addGuessLetter}/>
             {
                 gameStateRef.current.gameOver && (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">

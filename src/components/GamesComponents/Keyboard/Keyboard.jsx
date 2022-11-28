@@ -1,12 +1,9 @@
 
 
-interface KeyboardProps {
-  onClick: (key: string) => void;
-}
-export default function Keyboard({ onClick: onClickProps }: KeyboardProps) {
-//   const keyboardLetterState = useStore((s) => s.keyboardLetterState);
 
-  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+export default function Keyboard({addGuessLetter}) {
+//   const keyboardLetterState = useStore((s) => s.keyboardLetterState);
+  const onClick = (e) => {
     const { textContent, innerHTML } = e.currentTarget;
 
     let returnProps = textContent;
@@ -14,7 +11,7 @@ export default function Keyboard({ onClick: onClickProps }: KeyboardProps) {
       returnProps = 'Backspace';
     }
 
-    onClickProps(returnProps);
+    addGuessLetter(returnProps);
   };
   return (
     <div className={`flex flex-col`}>
@@ -58,7 +55,7 @@ export default function Keyboard({ onClick: onClickProps }: KeyboardProps) {
 const keyboardKeys = [
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
   ['', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ''],
-  ['Enter', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'Backspace'],
+  ['Enter', 'z', 'x', 'c', 'v', 'b', 'n', 'm', 'delete'],
 ];
 
 const backspace = (
