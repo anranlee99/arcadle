@@ -1,14 +1,14 @@
 import { computeGuess } from "../game-utils/word-utils";
 
 export default function WordRow({letters, letterLength, answer, currentGuess}){
-    
+
     const lettersRemaining = letterLength - letters.length;
     
     const charArr = letters.split('').concat(Array(lettersRemaining).fill('')) 
     let guessStates = computeGuess(letters, answer);
-    // if(currentGuess){
-    //    guessStates = ''
-    // }
+    if(currentGuess){
+       guessStates = Array(5).fill('')
+    }
     // const guessStates = gameState.current.computeGuess();
     return (
         <div className="grid grid-cols-5 gap-4">
