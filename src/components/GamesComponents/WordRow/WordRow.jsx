@@ -1,9 +1,9 @@
 import { computeGuess } from "../game-utils/word-utils";
 
 export default function WordRow({letters, letterLength, answer, currentGuess}){
-    console.log({letters})
+    
     const lettersRemaining = letterLength - letters.length;
-    console.log(currentGuess)
+    
     const charArr = letters.split('').concat(Array(lettersRemaining).fill('')) 
     let guessStates = computeGuess(letters, answer);
     // if(currentGuess){

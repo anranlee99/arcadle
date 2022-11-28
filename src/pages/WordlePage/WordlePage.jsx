@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import * as gameStateAPI from '../../utilities/gameState-api';
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
-
+import Keyboard from "../../components/GamesComponents/game-utils/Keyboard"
 const GUESS_LENGTH = 6;
 
 export default function WordlePage() {
@@ -22,61 +22,74 @@ export default function WordlePage() {
 
 
 
-    async function addGuess(){
-        
-        await gameStateAPI.addGuess(guess)
+    async function addGuess(word){
+        console.log('line26',{word})
+        await gameStateAPI.addGuess(word)
         gameStateRef.current = await gameStateAPI.getGameState()
+        console.log(gameStateRef.current)
         setMoves([...moves, guess])
         setGuess('')
+        window.location.reload(false);
     }
+
     function useGuess(){
         const [guess, setGuess] = useState('');
+        const previousGuess = usePrevious(guess)
         const WORD_LENGTH=5
-      const addGuessLetter = (letter: string) => {
-        setGuess((curGuess) => {
-          const newGuess =
-            letter.length === 1 && curGuess.length !== WORD_LENGTH
-              ? curGuess + letter
-              : curGuess;
-    
-          switch (letter) {
-            case 'Backspace':
-              return newGuess.slice(0, -1);
-            case 'Enter':
-              if (newGuess.length === WORD_LENGTH) {
-                addGuess();
-              }
-          }
-    
-          if (newGuess.length === WORD_LENGTH) {
+        const addGuessLetter = (letter: string) => {
+            setGuess((curGuess) => {
+            const newGuess =
+                letter.length === 1 && curGuess.length !== WORD_LENGTH
+                ? curGuess + letter
+                : curGuess;
+        
+            switch (letter) {
+                case 'Backspace':
+                return newGuess.slice(0, -1);
+                case 'Enter':
+                if (newGuess.length === WORD_LENGTH) {
+                    // addGuess(newGuess);
+                    return '';
+                }
+            }
+            
+            if (newGuess.length === WORD_LENGTH) {
+                return newGuess;
+            }
+        
             return newGuess;
-          }
-    
-          return newGuess;
-        });
-      };
-    
-      const onKeyDown = (e= KeyboardEvent) => {
-        let letter = e.key;
-        addGuessLetter(letter);
-      };
-    
-      useEffect(() => {
-        document.addEventListener('keydown', onKeyDown);
-        return () => {
-          document.removeEventListener('keydown', onKeyDown);
+            });
         };
-      }, []);
     
-      return [guess, setGuess, addGuessLetter];
+        const onKeyDown = (e = KeyboardEvent) => {
+            let letter = e.key;
+            console.log({letter})
+            addGuessLetter(letter);
+        };
+    
+        useEffect(() => {
+            document.addEventListener('keydown', onKeyDown);
+            return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            };
+        }, []);
+        useEffect(()=>{
+            if(guess.length===0 && previousGuess?.length===WORD_LENGTH){
+                addGuess(previousGuess)
+            }
+        }, [guess])
+        return [guess, setGuess];
     }
+
     async function newGame(){
         await gameStateAPI.newGame();
         window.location.reload(false);
     }
+
     let rows = moves.concat(guess)
     const currentGuess = rows.length
     rows = rows.concat(Array(GUESS_LENGTH-rows.length).fill(''))
+
     return (
         <div className="mx-auto w-96 relative">
             <header className="border-b border-gray-500 pb-2 my-2">
@@ -87,11 +100,12 @@ export default function WordlePage() {
                 
 
             </main>
-            <form onSubmit={addGuess} className=''>
+            <Keyboard />
+            {/* <form onSubmit={addGuess} className=''>
                 <input type="text" disabled={gameStateRef.current.gameOver}  className=' p-2 bg-blue-500 border-2 border-gray-500' 
                 value={guess} maxLength={5}
                 onChange={e => setGuess(e.target.value)} />
-            </form>
+            </form> */}
             {
                 gameStateRef.current.gameOver && (
                 <div role='modal' className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto">
@@ -105,3 +119,12 @@ export default function WordlePage() {
     )
 }
 
+function usePrevious (value){
+    const ref = useRef();
+
+    useEffect(()=>{
+        ref.current = value;
+    },[value])
+
+    return ref.current;
+}

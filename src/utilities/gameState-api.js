@@ -7,7 +7,13 @@ export function getGameState(){
 }
 
 export function addGuess(guess){
-    return sendRequest(`${BASE_URL}/addGuess/${guess}`, 'POST')
+    if(guess){
+        console.log('in add guess api', {guess})
+        return sendRequest(`${BASE_URL}/addGuess/${guess}`, 'POST')
+    }
+    else {
+        console.log('no guess')
+    }
 }
 
 export function newGame(){
