@@ -47,10 +47,9 @@ export default function WordlePage() {
                 case 'Backspace':
                 return newGuess.slice(0, -1);
                 case 'Enter':
-                if (newGuess.length === WORD_LENGTH) {
-                    // addGuess(newGuess);
-                    return '';
-                }
+                    if (newGuess.length === WORD_LENGTH) {
+                        return '';
+                    }
             }
             
             if (newGuess.length === WORD_LENGTH) {
@@ -63,8 +62,11 @@ export default function WordlePage() {
     
         const onKeyDown = (e = KeyboardEvent) => {
             let letter = e.key;
-            console.log({letter})
-            addGuessLetter(letter);
+            const alpha = /^[a-z]/
+            if(letter.match(alpha)||letter==='Backspace'||letter==='Enter'){
+                
+                addGuessLetter(letter);
+            }
         };
     
         useEffect(() => {
