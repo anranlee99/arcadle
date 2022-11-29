@@ -1,7 +1,9 @@
+// import { move } from "../../../../routes/api/gameState";
+import { computeGuess } from "../game-utils/word-utils";
 
 
 
-export default function Keyboard({addGuessLetter}) {
+export default function Keyboard({addGuessLetter, moves, answer}) {
 //   const keyboardLetterState = useStore((s) => s.keyboardLetterState);
   const onClick = (e) => {
     const { textContent, innerHTML } = e.currentTarget;
@@ -13,6 +15,31 @@ export default function Keyboard({addGuessLetter}) {
 
     addGuessLetter(returnProps);
   };
+  
+  function getLetterState (letter){
+
+    const known = {}
+    for (let move of moves){
+      let colors = computeGuess(move, answer)
+      let charArr = move.split('')
+      for(let i in charArr){
+        known[charArr[i]] = known[charArr[i]]? [...known[charArr[i]],colors[i] ] : [colors[i]]
+      }
+    }
+
+    const letterSet = new Set(known[letter])
+    if(!letterSet.size){
+      return '';
+    } else {
+      if(letterSet.has('bg-[#568049]')){
+        return 'bg-[#568049]'
+      } else if(letterSet.has('bg-[#A8953F]')){
+        return 'bg-[#A8953F]'
+      } else {
+        return 'bg-[#333334]'
+      }
+    }
+  }
   return (
     <div className={`flex flex-col`}>
       {keyboardKeys.map((keyboardRow, rowIndex) => (
@@ -20,13 +47,13 @@ export default function Keyboard({addGuessLetter}) {
           {keyboardRow.map((key, index) => {
             let styles = 'rounded font-bold uppercase flex-1 py-2';
 
-            // const letterState = keyStateStyles[keyboardLetterState[key]];
+            const letterState = getLetterState(key)
 
-            // if (letterState) {
-            //   styles += ' text-white px-1 ' + letterState;
-            // } else if (key !== '') {
-            //   styles += ' bg-gray-400';
-            // }
+            if (letterState) {
+              styles += ' text-white px-1 ' + letterState;
+            } else if (key !== '') {
+              styles += ' bg-[#767879]';
+            }
 
             if (key === '') {
               styles += ' pointer-events-none';

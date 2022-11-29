@@ -138,7 +138,7 @@ export default function WordlePage() {
                 
 
             </main>
-            <Keyboard addGuessLetter={addGuessLetter}/>
+            <Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/>
             {
                 gameStateRef.current.gameOver && (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
