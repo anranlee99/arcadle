@@ -4,7 +4,6 @@ const gameStateCtrl = require('../../controllers/api/gameState');
 
 
 router.get('/current', gameStateCtrl.gameState);
-router.post('/addGuess/:guess', gameStateCtrl.addGuess);
-router.post('/new', gameStateCtrl.newGame);
+router.post('/saveGame', gameStateCtrl.saveGame);
 
 module.exports = router;

@@ -7,50 +7,70 @@ import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
 const GUESS_LENGTH = 6;
 
 export default function WordlePage() {
+    // const [moves, setMoves] = useState((async function(){
+    //     return await gameStateAPI.getGameState()
+    // }();))
     const [moves, setMoves] = useState([])
-    // const [guess, setGuess] = useState('')
     const [guess, setGuess, addGuessLetter] = useGuess()
-    const [answer, setAnswer] = useState('')
-    const gameStateRef = useRef({});
-
+    const [answer, setAnswer] = useState('gourd')
+    const [gameOver, setGameOver] = useState(false)
+    const [victory, setVictory] = useState(false)
     const [showInvalidGuess, setInvalidGuess] = useState(false);
+    const [loading, setLoading] = useState(true)
+    const [isNewGame, setIsNewGame] = useState(false)
+    const [useEffectCt, setUseEffectCt] = useState(0)
+    useEffect(function(){
+        (async function(){
+            
+                setUseEffectCt(useEffectCt+1)
+                const gameState = await gameStateAPI.getGameState(); 
+                setMoves(gameState.record.guesses)
+                setAnswer(gameState.record.answer)
+                setGameOver(gameState.gameOver)
+                setVictory(gameState.victory)
+                setIsNewGame(false)
+                setLoading(false)
+        })();
+    },[isNewGame])
+    useEffect(function(){
+        (async function(){
+            if(!loading){
+                await gameStateAPI.saveGame(gameOver,moves,victory)
+
+            }            
+        })();
+    },[loading,gameOver, moves, victory])
 
     useEffect(() => {
       let id: NodeJS.Timeout;
       if (showInvalidGuess) {
-        id = setTimeout(() => setInvalidGuess(false), 10000);
+        id = setTimeout(() => setInvalidGuess(false), 1500);
       }
   
       return () => clearTimeout(id);
     }, [showInvalidGuess]);
 
     useEffect(function(){
-        ( async function(){
-            gameStateRef.current = await gameStateAPI.getGameState()
-            setMoves(gameStateRef.current.record.guesses)
-            setAnswer(gameStateRef.current.record.answer)
-            console.log(gameStateRef.current)
-        })();
-    },[]);
+        checkEndGame()
+    },[moves,guess])
 
-
-
-    async function addGuess(word){
+    function addGuess(word){
 
         if(validateGuess(word)){
-            await gameStateAPI.addGuess(word)
-            
-            console.log(gameStateRef.current)
-            setMoves([...moves, guess])
-            gameStateRef.current = await gameStateAPI.getGameState()
+            setMoves([...moves, word])
         } else {
             setInvalidGuess(true)
         }
-        
         setGuess('')
-        window.location.reload(false);
     }
-
+    function checkEndGame(){
+        if(moves.length === 6){
+            setGameOver(true)
+        } else if(moves[moves.length-1]=== answer){
+            setGameOver(true)
+            setVictory(true)
+        }
+    }
     function useGuess(){
         const [guess, setGuess] = useState('');
         const previousGuess = usePrevious(guess)
@@ -105,9 +125,9 @@ export default function WordlePage() {
         return [guess, setGuess, addGuessLetter];
     }
 
-    async function newGame(){
-        await gameStateAPI.newGame();
-        window.location.reload(false);
+    function newGame(){
+        setGuess('')
+        setIsNewGame(true)
     }
     let rows = moves.length<6 ? moves.concat(guess) : moves;
     rows = rows.concat(Array(GUESS_LENGTH-rows.length).fill(''))
@@ -121,8 +141,13 @@ export default function WordlePage() {
                 invalid guess!
             </div> : ''
             }
+            {loading ? 
+            <div
+                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
+                    Loading...
+            </div> : ''}
             <header className="border-b border-gray-500 pb-2 my-2">
-                <h1 className="page-title">Wordle</h1>
+                <h1 className="page-title">Wordle {useEffectCt}</h1>
             </header>
             <main className='grid grid-rows-6 gap-4 my-4'>
                 {rows.map((row, idx)=>(
@@ -138,16 +163,16 @@ export default function WordlePage() {
                 
 
             </main>
-            <Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/>
+            {<Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/> }
             {
-                gameStateRef.current.gameOver && (
+                gameOver && (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
-                    {gameStateRef.current.victory ? 'You win!' : 'Better Luck Next Time'}
+                    {victory ? 'You win!' : 'Better Luck Next Time'}
                     <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
                         New Game
                     </button>
                 </div>)
-            }
+            } 
         </div>
     )
 }

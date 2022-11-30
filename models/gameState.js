@@ -7,7 +7,6 @@ const gameStateSchema = new Schema({
     gameType: {type: String, required: true},
     gameOver: {type: Boolean, required: true, default: false},
     victory: {type: Boolean, required: true, default: false},
-    currentGame:{type:Boolean, required:true, default:true},
     record:{
         answer: {type:String, required: true},
         numGuesses: {type: Number, default: 0},
@@ -19,15 +18,12 @@ const gameStateSchema = new Schema({
 });
 
 gameStateSchema.statics.getGameState = async function(userId) {  
-    const gameState = await this.findOne({user: userId, currentGame: true})
-    console.log('in getGameState',gameState)
+    const gameState = await this.findOne({user: userId, gameOver: false})
     if(gameState){
-        console.log('gamestate exists')
         return gameState
     } else {
         const newGameState = new this({
             user: userId,
-            currentGame: true,
             gameType: 'Wordle',
 
             record:{answer: utils.getRandomWord(), numGuesses:6, guesses:[]}
@@ -37,32 +33,17 @@ gameStateSchema.statics.getGameState = async function(userId) {
     }
 }
 
-gameStateSchema.methods.computeGuess = function(){
-    const currentGuess = this.record.guesses[this.record.guesses.length-1]
-    if(this.record.guesses.length === this.record.numGuesses){
-        this.gameOver = true;
-    } else if(currentGuess === this.record.answer){
-        this.gameOver = true;
-        this.victory = true;
+
+
+gameStateSchema.statics.saveGameState = async function(userId,gameOver, moves, victory){
+    const gameState = await this.findOne({user: userId, gameOver: false})
+   
+    if(gameState){
+        gameState.record.guesses = moves
+        gameState.gameOver = gameOver
+        gameState.victory = victory
+        await gameState.updateOne(gameState)
     }
-    return utils.computeGuess(currentGuess, this.record.answer)
-}
-
-gameStateSchema.methods.newGame = async function(){
-    console.log('in new game model method')
-    this.currentGame = false;
-    await this.save();
-}
-
-gameStateSchema.methods.addGuess = function(guess){
-    console.log('in addGuess Static',this, guess)
-    const gameState = this
-
-    gameState.record.guesses.push(guess)
-    gameState.computeGuess();
-    console.log('this after push ', this)
-    // return this.update(this)
-    return gameState.save()
 }
 
 module.exports = mongoose.model('GameState', gameStateSchema)

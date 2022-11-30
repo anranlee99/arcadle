@@ -6,16 +6,7 @@ export function getGameState(){
     return sendRequest(`${BASE_URL}/current`)
 }
 
-export function addGuess(guess){
-    if(guess){
-        console.log('in add guess api', {guess})
-        return sendRequest(`${BASE_URL}/addGuess/${guess}`, 'POST')
-    }
-    else {
-        console.log('no guess')
-    }
-}
 
-export function newGame(){
-    return sendRequest(`${BASE_URL}/new`, 'POST')
+export function saveGame(gameOver, moves, victory){
+    return sendRequest(`${BASE_URL}/saveGame`, 'POST', {gameOver, moves, victory})
 }

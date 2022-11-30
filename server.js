@@ -19,6 +19,7 @@ app.use(express.static(path.join(__dirname, 'build')))
 app.use(require('./config/checkToken'))
 
 app.use('/api/users', require('./routes/api/users'))
+app.use('/api/leaderboard', require('./routes/api/leaderboard'))
 app.use('/api/gameState', ensureLoggedIn, require('./routes/api/gameState'))
 
 app.get('/*', function(req, res) {

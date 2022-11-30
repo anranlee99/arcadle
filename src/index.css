@@ -5,14 +5,14 @@
 
 :root {
   background-color: white;
-  /* --white: #FFFFFF;
+  --white: #FFFFFF;
   --tan-1: #FBF9F6;
   --tan-2: #E7E2DD;
   --tan-3: #E2D9D1;
   --tan-4: #D3C1AE;
   --orange: #F67F00;
   --text-light: #968c84;
-  --text-dark: #615954; */
+  --text-dark: #615954;
 }
 
 *, *:before, *:after {
@@ -122,7 +122,7 @@ input:focus {
   border-color: var(--orange);
 }
 
-button, a.button {
+button[type="submit"], a.button {
   margin: 1vmin;
   padding: 1vmin;
   color: var(--white);
