@@ -9,7 +9,7 @@ export default function NavBar({ user, setUser }) {
     }
 
     return (
-        <aside className="w-64" aria-label="Sidebar">
+        <aside className="w-64" aria-label="Sidebar" style={{gridArea:'aside'}}>
             <div className="overflow-y-auto py-4 px-3 bg-gray-50 rounded dark:bg-gray-800">
                 <ul className="space-y-2">
                     <li>

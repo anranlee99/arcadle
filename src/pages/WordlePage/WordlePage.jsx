@@ -4,6 +4,8 @@ import { validateGuess } from "../../components/GamesComponents/game-utils/word-
 import * as gameStateAPI from '../../utilities/gameState-api';
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
 import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
+
+import Header from '../../components/Header/Header'
 const GUESS_LENGTH = 6;
 
 export default function WordlePage() {
@@ -133,7 +135,10 @@ export default function WordlePage() {
     rows = rows.concat(Array(GUESS_LENGTH-rows.length).fill(''))
 
     return (
-        <div className="mx-auto w-96 relative">
+        <>
+        <Header title={'Wordle'}/>
+        
+        <div className="mx-auto w-96 relative " style={{gridArea:'main'}}>
             {
             showInvalidGuess ? 
             <div
@@ -146,10 +151,10 @@ export default function WordlePage() {
                 className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
                     Loading...
             </div> : ''}
-            <header className="border-b border-gray-500 pb-2 my-2">
-                <h1 className="page-title">Wordle {useEffectCt}</h1>
-            </header>
-            <main className='grid grid-rows-6 gap-4 my-4'>
+            {/* <header className="border-b border-gray-500 pb-2 my-2">
+                <h1 className="page-title">Wordle </h1>
+            </header> */}
+            <main className='grid grid-rows-6 gap-4 my-4 ' >
                 {rows.map((row, idx)=>(
                     <WordRow 
                         key={idx} 
@@ -174,6 +179,7 @@ export default function WordlePage() {
                 </div>)
             } 
         </div>
+        </>
     )
 }
 
