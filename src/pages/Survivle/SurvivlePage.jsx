@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import "./WordlePage.css"
+
 import { validateGuess } from "../../components/GamesComponents/game-utils/word-utils";
 import * as gameStateAPI from '../../utilities/gameState-api';
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
@@ -7,36 +7,45 @@ import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
 
 import Header from '../../components/Header/Header'
 const GUESS_LENGTH = 6;
-const GAMETYPE = 'Wordle'
-export default function WordlePage() {
+const GAMETYPE = 'Survivle'
+export default function SurvivlePage() {
     
     const [moves, setMoves] = useState([])
+    const [wins, setWins] = useState(0)
+    const [losses, setLosses] = useState(0)
     const [guess, setGuess, addGuessLetter] = useGuess()
-    const [answer, setAnswer] = useState('gourd')
+    const [answer, setAnswer] = useState('')
     const [gameOver, setGameOver] = useState(false)
     const [victory, setVictory] = useState(false)
     const [showInvalidGuess, setInvalidGuess] = useState(false);
     const [loading, setLoading] = useState(true)
     const [isNewGame, setIsNewGame] = useState(false)
-    
+    // const [restarting, setRestarting] = useState(false)
+    const [milli, setMilli] = useState(30000);
+    const [isActive, setIsActive] = useState(false);
+    const [timeIsUp, setTimeIsUp] = useState(false)
     useEffect(function(){
+
         (async function(){
-            
-                
                 const gameState = await gameStateAPI.getGameState(GAMETYPE); 
                 setMoves(gameState.record.guesses)
                 setAnswer(gameState.record.answer)
                 setGameOver(gameState.gameOver)
                 setVictory(gameState.victory)
-                setIsNewGame(false)
+                setGuess('')
+                setMilli(30000)
+                setTimeIsUp(false)
                 setLoading(false)
+                setIsActive(true)
         })();
     },[isNewGame])
+
     useEffect(function(){
         (async function(){
             if(!loading){
-                await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
 
+                await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
+                
             }            
         })();
     },[loading,gameOver, moves, victory])
@@ -50,27 +59,47 @@ export default function WordlePage() {
       return () => clearTimeout(id);
     }, [showInvalidGuess]);
 
+    useEffect(() => {
+        let interval = null;
+        if (isActive) {
+          interval = setInterval(() => {
+            setMilli(milli => milli - 1000);
+          }, 1000);
+        } else if (!isActive && milli !== 0) {
+          clearInterval(interval);
+        }
+        return () => clearInterval(interval);
+    }, [isActive, milli]);
+
+    useEffect(()=>{
+        if(milli <= 0){
+            setIsActive(false)
+            setTimeIsUp(true)
+        }  
+    },[milli])
+    
+
     useEffect(function(){
         checkEndGame()
-    },[moves,guess])
+    },[moves,guess,timeIsUp])
 
-    function addGuess(word){
-
-        if(validateGuess(word)){
-            setMoves([...moves, word])
-        } else {
-            setInvalidGuess(true)
-        }
-        setGuess('')
-    }
     function checkEndGame(){
-        if(moves.length === 6){
+        if(moves.length === 6 || timeIsUp){
             setGameOver(true)
+            setMilli(milli - 10000)
         } else if(moves[moves.length-1]=== answer){
             setGameOver(true)
             setVictory(true)
-        }
+            setMilli(milli + 30000)
+        } 
     }
+    function newGame(){
+        //use something else here for a new survivle game
+        setIsNewGame(true)
+    }
+
+    
+
     function useGuess(){
         const [guess, setGuess] = useState('');
         const previousGuess = usePrevious(guess)
@@ -124,33 +153,49 @@ export default function WordlePage() {
         }, [guess])
         return [guess, setGuess, addGuessLetter];
     }
-
-    function newGame(){
+    function addGuess(word){
+        
+        if(validateGuess(word)){
+            setMoves([...moves, word])
+        } else {
+            setInvalidGuess(true)
+        }
         setGuess('')
-        setIsNewGame(true)
     }
+    
     let rows = moves.length<6 ? moves.concat(guess) : moves;
     rows = rows.concat(Array(GUESS_LENGTH-rows.length).fill(''))
 
     return (
         <>
-        <Header title={GAMETYPE}/>
+        <Header title={'Survivle'}/>
         
-        <div className="mx-auto w-96 relative " style={{gridArea:'main'}}>
-            {
-            showInvalidGuess ? 
-            <div
-                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
-                invalid guess!
-            </div> : ''
+        <div className="mx-auto w-96 relative pt-100" style={{gridArea:'main', paddingTop:'100px'}}>
+            <div className="flex">{
+                milli>0 && !loading && !showInvalidGuess ? 
+                <div
+                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black mb-100'>
+                Time Left - {Math.floor((milli/60)/1000)%60}:{(Math.floor(milli/1000)%60).toString().padStart(2,'0')}
+                &nbsp; | &nbsp;
+                guessState: {guess}
+                &nbsp; | &nbsp;
+                movesState: {moves}
+                </div> : ''
             }
+            {
+                showInvalidGuess ? 
+                <div
+                    className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce' >
+                    invalid guess!
+                </div> : ''
+            }</div>
             {loading ? 
             <div
                 className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
                     Loading...
             </div> : ''}
             
-            <main className='grid grid-rows-6 gap-4 my-4 ' >
+            <main className='grid grid-rows-6 gap-4 ' >
                 {rows.map((row, idx)=>(
                     <WordRow 
                         key={idx} 
@@ -158,7 +203,6 @@ export default function WordlePage() {
                         letterLength={5} 
                         answer={answer} 
                         currentGuess={idx===moves.length}
-
                     />
                 ))}
                 
@@ -166,9 +210,9 @@ export default function WordlePage() {
             </main>
             {<Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/> }
             {
-                gameOver && (
+                timeIsUp && (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
-                    {victory ? 'You win!' : 'Better Luck Next Time'}
+                    {'sometext here'}
                     <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
                         New Game
                     </button>

@@ -17,14 +17,14 @@ const gameStateSchema = new Schema({
     toJSON: { virtuals: true }
 });
 
-gameStateSchema.statics.getGameState = async function(userId) {  
-    const gameState = await this.findOne({user: userId, gameOver: false})
+gameStateSchema.statics.getGameState = async function(userId, type) {  
+    const gameState = await this.findOne({user: userId, gameOver: false, gameType: type})
     if(gameState){
         return gameState
     } else {
         const newGameState = new this({
             user: userId,
-            gameType: 'Wordle',
+            gameType: type,
 
             record:{answer: utils.getRandomWord(), numGuesses:6, guesses:[]}
         })
@@ -35,8 +35,8 @@ gameStateSchema.statics.getGameState = async function(userId) {
 
 
 
-gameStateSchema.statics.saveGameState = async function(userId,gameOver, moves, victory){
-    const gameState = await this.findOne({user: userId, gameOver: false})
+gameStateSchema.statics.saveGameState = async function(userId, type, gameOver, moves, victory){
+    const gameState = await this.findOne({user: userId, gameOver: false, gameType: type})
    
     if(gameState){
         gameState.record.guesses = moves

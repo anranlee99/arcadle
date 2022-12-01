@@ -1,25 +1,28 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import * as LeaderboardAPI from "../../utilities/leaderboard-api"
+import Header from "../../components/Header/Header"
 export default function LeaderboardPage(){
-    const allUsers = useRef({})
-    const userComponents = useRef({});
-
+    const [userComponents, setUserComponents] = useState([])
+    const [loading, setLoading] = useState(true)
     useEffect(function(){
         (async function(){
-            allUsers.current = await LeaderboardAPI.getAll()
-            console.log(allUsers.current)  
-            userComponents.current = allUsers.current.map(user=>(
+            const users = await LeaderboardAPI.getAll()
+            const userCards = users.map(user=>(
                 <h3 key={user._id}>{user.name}</h3>
-            ))  
+            ))
+            setUserComponents(userCards)
+            setLoading(false)
         })();
     },[])
     
     return (
         <>
-            <h1>This is the Leaderboard</h1>
-            {userComponents.current}
-            
+            <Header title={'Leaderboard'}/>
+            <div className="main"  style={{gridArea:'main'}}>
+                {loading && userComponents.length ? 'Loading...' : userComponents}    
+
+            </div>
         </>
     );
 }
