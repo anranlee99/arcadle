@@ -9,7 +9,6 @@ const gameStateSchema = new Schema({
     victory: {type: Boolean, required: true, default: false},
     record:{
         answer: {type:String, required: true},
-        numGuesses: {type: Number, default: 0},
         guesses:[String]
     }
 }, {
@@ -17,19 +16,33 @@ const gameStateSchema = new Schema({
     toJSON: { virtuals: true }
 });
 
-gameStateSchema.statics.getGameState = async function(userId, type) {  
+gameStateSchema.statics.getGameState = async function(userId, type, guessLength) {  
     const gameState = await this.findOne({user: userId, gameOver: false, gameType: type})
     if(gameState){
         return gameState
     } else {
-        const newGameState = new this({
-            user: userId,
-            gameType: type,
-
-            record:{answer: utils.getRandomWord(), numGuesses:6, guesses:[]}
-        })
-        await newGameState.save()
-        return newGameState
+        let newGameState 
+        if(type==='Gamble'){
+            console.log('handleGamble', {guessLength})
+            newGameState= new this({
+                user: userId,
+                gameType: type,
+    
+                record:{answer: utils.getRandomWord(), guesses:[]}
+            })
+            await newGameState.save()
+            return newGameState
+        } else {
+            newGameState= new this({
+                user: userId,
+                gameType: type,
+    
+                record:{answer: utils.getRandomWord(), guesses:[]}
+            })
+            await newGameState.save()
+            return newGameState
+        }
+        
     }
 }
 

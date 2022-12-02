@@ -1,0 +1,199 @@
+import { useState, useEffect, useRef } from "react"
+
+import { validateGuess } from "../../components/GamesComponents/game-utils/word-utils";
+import * as gameStateAPI from '../../utilities/gameState-api';
+import * as usersAPI from "../../utilities/users-api"
+import WordRow from "../../components/GamesComponents/WordRow/WordRow"
+import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
+import Header from '../../components/Header/Header'
+
+const GAMETYPE = 'Gamble'
+export default function WordlePage() {
+    const [movesLength, setMovesLength] = useState(6)
+    const [wordLength, setWordLength] = useState(5)
+    const [moves, setMoves] = useState([])
+    const [guess, setGuess, addGuessLetter] = useGuess()
+    const [answer, setAnswer] = useState('gourd')
+    const [gameOver, setGameOver] = useState(false)
+    const [victory, setVictory] = useState(false)
+    const [showInvalidGuess, setInvalidGuess] = useState(false);
+    const [loading, setLoading] = useState(true)
+    const [isNewGame, setIsNewGame] = useState(false)
+    
+    useEffect(function(){
+        (async function(){
+            
+                
+                const gameState = await gameStateAPI.getGameState(GAMETYPE, wordLength); 
+                setMoves(gameState.record.guesses)
+                setAnswer(gameState.record.answer)
+                setGameOver(gameState.gameOver)
+                setVictory(gameState.victory)
+                setIsNewGame(false)
+                setLoading(false)
+        })();
+    },[isNewGame])
+    useEffect(function(){
+        (async function(){
+            if(!loading){
+                await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
+                // if(victory){
+                //     const profile = await usersAPI.getProfile()
+                //     await usersAPI.updateProfile(profile.score + 100, profile.currency + 1)
+                // }
+            }            
+        })();
+    },[loading,gameOver, moves, victory])
+
+    useEffect(() => {
+      let id: NodeJS.Timeout;
+      if (showInvalidGuess) {
+        id = setTimeout(() => setInvalidGuess(false), 1500);
+      }
+  
+      return () => clearTimeout(id);
+    }, [showInvalidGuess]);
+
+    useEffect(function(){
+        checkEndGame()
+    },[moves,guess])
+
+    function addGuess(word){
+
+        if(validateGuess(word)){
+            setMoves([...moves, word])
+        } else {
+            setInvalidGuess(true)
+        }
+        setGuess('')
+    }
+    function checkEndGame(){
+        if(moves.length === movesLength){
+            setGameOver(true)
+        } else if(moves[moves.length-1]=== answer){
+            setGameOver(true)
+            setVictory(true)
+        }
+    }
+    function useGuess(){
+        const [guess, setGuess] = useState('');
+        const previousGuess = usePrevious(guess)
+        
+        const addGuessLetter = (letter) => {
+            setGuess((curGuess) => {
+            const newGuess =
+                letter.length === 1 && curGuess.length !== wordLength
+                ? curGuess + letter
+                : curGuess;
+        
+            switch (letter) {
+                case 'Backspace':
+                    return newGuess.slice(0, -1);
+                case 'Enter':
+                    if (newGuess.length === wordLength) {
+                        return '';
+                    }
+                    break;
+                default:
+                    break;
+            }
+            
+            if (newGuess.length === wordLength) {
+                return newGuess;
+            }
+        
+            return newGuess;
+            });
+        };
+    
+        const onKeyDown = (e = KeyboardEvent) => {
+            let letter = e.key;
+            const alpha = /^[a-z]/
+            if(letter.match(alpha)||letter==='Backspace'||letter==='Enter'){
+                
+                addGuessLetter(letter);
+            }
+        };
+    
+        useEffect(() => {
+            document.addEventListener('keydown', onKeyDown);
+            return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            };
+        }, []);
+        useEffect(()=>{
+            if(guess.length===0 && previousGuess?.length===wordLength){
+                addGuess(previousGuess)
+            }
+        }, [guess])
+        return [guess, setGuess, addGuessLetter];
+    }
+
+    function newGame(){
+        setGuess('')
+        setIsNewGame(true)
+    }
+    let rows = moves.length<movesLength ? moves.concat(guess) : moves;
+    rows = rows.concat(Array(movesLength-rows.length).fill(''))
+    console.log({rowsLength: rows.length})
+    return (
+        <>
+        <Header title={GAMETYPE}/>
+        
+        <div className="mx-auto w-96 relative " style={{gridArea:'main'}}>
+            {
+            showInvalidGuess ? 
+            <div
+                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
+                invalid guess!
+            </div> : ''
+            }
+            {loading ? 
+            <div
+                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
+                    Loading...
+            </div> : ''}
+            
+            <main className={`grid grid-rows-${movesLength} gap-4 my-4`} >
+                {rows.map((row, idx)=>(
+                    <WordRow 
+                        key={idx} 
+                        letters={row} 
+                        letterLength={wordLength} 
+                        answer={answer} 
+                        currentGuess={idx===moves.length}
+
+                    />
+                ))}
+                
+
+            </main>
+            {<Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/> }
+            {
+                gameOver && (
+                <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
+                    {victory ? 
+                        'You win! 1 coin and 100 points have been added to your account!' : 
+                        <div>
+                            Better Luck Next Time. &nbsp;The answer was {answer}
+                        </div> 
+                    }
+                    <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
+                        New Game
+                    </button>
+                </div>)
+            } 
+        </div>
+        </>
+    )
+}
+
+function usePrevious (value){
+    const ref = useRef();
+
+    useEffect(()=>{
+        ref.current = value;
+    },[value])
+
+    return ref.current;
+}

@@ -7,11 +7,11 @@ export default function WordRow({letters, letterLength, answer, currentGuess}){
     const charArr = letters.split('').concat(Array(lettersRemaining).fill('')) 
     let guessStates = computeGuess(letters, answer);
     if(currentGuess){
-       guessStates = Array(5).fill('')
+       guessStates = Array(letterLength).fill('')
     }
     // const guessStates = gameState.current.computeGuess();
     return (
-        <div className="grid grid-cols-5 gap-4">
+        <div className={`grid grid-cols-${letterLength} gap-4`}>
             {charArr.map((char, idx) => (
             <ChracterBox key={idx} char={char} guessState={guessStates[idx]} />
             ))}

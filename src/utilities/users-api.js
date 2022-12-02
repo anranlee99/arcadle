@@ -13,8 +13,13 @@ export function checkToken() {
     return sendRequest(`${BASE_URL}/check-token`)
 }
 
-export function getProfile(){
-    return sendRequest(`${BASE_URL}/profile`);
+export function getProfile(userID=''){
+    if(userID){
+        return sendRequest(`${BASE_URL}/profile?id=${userID}`)
+    } else {
+
+        return sendRequest(`${BASE_URL}/profile`);
+    }
 }
 export function updateProfile(score, currency){
     return sendRequest(`${BASE_URL}/profile/update`, 'POST', {newScore: score, newCurrency: currency});

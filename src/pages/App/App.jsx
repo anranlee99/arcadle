@@ -4,6 +4,7 @@ import './App.css';
 import { getUser } from '../../utilities/users-service'
 import AuthPage from '../AuthPage/AuthPage'
 import WordlePage from '../WordlePage/WordlePage'
+import GamblePage from '../GamblePage/GamblePage'
 import SurvivlePage from '../Survivle/SurvivlePage';
 import NavBar from '../../components/NavBar/NavBar'
 import LeaderboardPage from '../Leaderboard/LeaderboardPage';
@@ -22,6 +23,7 @@ export default function App() {
           <Routes>
             <Route path="/wordle" element={<WordlePage />} />
             <Route path="/survivle" element={<SurvivlePage />} />
+            <Route path="/gamble" element={<GamblePage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/" element={<Navigate to="/wordle" />} />
           </Routes>

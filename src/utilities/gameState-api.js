@@ -2,8 +2,13 @@ import sendRequest from "./send-request";
 
 const BASE_URL = '/api/gameState';
 
-export function getGameState(gameType){
-    return sendRequest(`${BASE_URL}/current?gameType=${gameType}`, 'GET')
+export function getGameState(gameType, wordLength=5){
+    if(wordLength===5){
+
+        return sendRequest(`${BASE_URL}/current?gameType=${gameType}`, 'GET')
+    } else {
+        return sendRequest(`${BASE_URL}/current?gameType=${gameType}&wordLength=${wordLength}`, 'GET')
+    }
 }
 
 

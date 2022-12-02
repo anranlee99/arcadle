@@ -38,7 +38,13 @@ async function login(req, res) {
 }
 
 async function getProfile(req, res) {
-    const profile = await Profile.findOne({user: req.user._id})
+
+    let profile;
+    if(req.query.id){
+        profile = await Profile.findOne({user: req.query.id})  
+    } else {
+        profile = await Profile.findOne({user: req.user._id})  
+    } 
     res.json(profile)
 }
 
