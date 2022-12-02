@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react"
 import "./WordlePage.css"
 import { validateGuess } from "../../components/GamesComponents/game-utils/word-utils";
 import * as gameStateAPI from '../../utilities/gameState-api';
+import * as usersAPI from "../../utilities/users-api"
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
 import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
-
 import Header from '../../components/Header/Header'
 const GUESS_LENGTH = 6;
 const GAMETYPE = 'Wordle'
@@ -36,7 +36,12 @@ export default function WordlePage() {
         (async function(){
             if(!loading){
                 await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
-
+                if(victory){
+                    const profile = await usersAPI.getProfile()
+                    await usersAPI.updateProfile(profile.score + 100, profile.currency + 1)
+                    
+                    // await profile.save();
+                }
             }            
         })();
     },[loading,gameOver, moves, victory])
@@ -168,7 +173,12 @@ export default function WordlePage() {
             {
                 gameOver && (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
-                    {victory ? 'You win!' : 'Better Luck Next Time'}
+                    {victory ? 
+                        'You win! 1 coin and 100 points have been added to your account!' : 
+                        <div>
+                            Better Luck Next Time. &nbsp;The answer was {answer}
+                        </div> 
+                    }
                     <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
                         New Game
                     </button>

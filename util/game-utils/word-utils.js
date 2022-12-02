@@ -1,8 +1,8 @@
 const WordBank = require('./wordBank.json')
-
+const Answers = require('./answers.json')
 function getRandomWord() {
-    const randomIndex = Math.floor(Math.random()*WordBank.length);
-    return WordBank[randomIndex]
+    const randomIndex = Math.floor(Math.random()*Answers.length);
+    return Answers[randomIndex]
 }
 
 

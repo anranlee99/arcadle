@@ -2,50 +2,72 @@ import { useState, useEffect, useRef } from "react"
 
 import { validateGuess } from "../../components/GamesComponents/game-utils/word-utils";
 import * as gameStateAPI from '../../utilities/gameState-api';
+import * as usersAPI from '../../utilities/users-api';
+
 import WordRow from "../../components/GamesComponents/WordRow/WordRow"
 import Keyboard from "../../components/GamesComponents/Keyboard/Keyboard"
 
 import Header from '../../components/Header/Header'
+
 const GUESS_LENGTH = 6;
 const GAMETYPE = 'Survivle'
 export default function SurvivlePage() {
     
     const [moves, setMoves] = useState([])
     const [wins, setWins] = useState(0)
-    const [losses, setLosses] = useState(0)
+    const [gameCt, setGameCt] = useState(0)
     const [guess, setGuess, addGuessLetter] = useGuess()
     const [answer, setAnswer] = useState('')
     const [gameOver, setGameOver] = useState(false)
     const [victory, setVictory] = useState(false)
     const [showInvalidGuess, setInvalidGuess] = useState(false);
     const [loading, setLoading] = useState(true)
-    const [isNewGame, setIsNewGame] = useState(false)
-    // const [restarting, setRestarting] = useState(false)
-    const [milli, setMilli] = useState(30000);
+    const [saving, setSaving] = useState(false)
+    const [savingSurvivle, setSavingSurvivle] = useState(false)
+    const [isNewGame, setIsNewGame] = useState(true)
+    const [gameIDs, setGameIDs] = useState([])
+    const [restarting, setRestarting] = useState(false)
+    const [milli, setMilli] = useState(300000);
     const [isActive, setIsActive] = useState(false);
-    const [timeIsUp, setTimeIsUp] = useState(false)
+    const [timeIsUp, setTimeIsUp] = useState(false);
+    const [coins, setCoins] = useState(0)
+    const [paid, setPaid] = useState(false)
+
     useEffect(function(){
 
         (async function(){
-                const gameState = await gameStateAPI.getGameState(GAMETYPE); 
-                setMoves(gameState.record.guesses)
-                setAnswer(gameState.record.answer)
-                setGameOver(gameState.gameOver)
-                setVictory(gameState.victory)
-                setGuess('')
-                setMilli(30000)
-                setTimeIsUp(false)
-                setLoading(false)
-                setIsActive(true)
-        })();
-    },[isNewGame])
+                if(!timeIsUp){
 
+                    const profile = await usersAPI.getProfile();
+                    setCoins(profile.currency) 
+                    const gameState = await gameStateAPI.getGameState(GAMETYPE); 
+                    setMoves(gameState.record.guesses)
+                    setAnswer(gameState.record.answer)
+                    setGameOver(gameState.gameOver)
+                    setVictory(gameState.victory)
+                    if(isNewGame){
+                        setGuess('')
+                        setGameCt(gameCt + 1)
+                        setGameIDs([...gameIDs,gameState._id])
+                    }
+                }
+
+                setLoading(false)
+                if(paid){
+                    setIsActive(true)
+                }
+        })();
+    },[isNewGame, paid])
+    
     useEffect(function(){
         (async function(){
             if(!loading){
-
-                await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
-                
+                if(gameOver){
+                    await gameStateAPI.saveGame(GAMETYPE,gameOver,moves,victory)
+                    setIsNewGame(true)
+                } else {
+                    setIsNewGame(false)
+                }
             }            
         })();
     },[loading,gameOver, moves, victory])
@@ -63,7 +85,7 @@ export default function SurvivlePage() {
         let interval = null;
         if (isActive) {
           interval = setInterval(() => {
-            setMilli(milli => milli - 1000);
+            setMilli(milli - 1000);
           }, 1000);
         } else if (!isActive && milli !== 0) {
           clearInterval(interval);
@@ -80,21 +102,48 @@ export default function SurvivlePage() {
     
 
     useEffect(function(){
-        checkEndGame()
-    },[moves,guess,timeIsUp])
+        if(moves.length){
+            checkEndGame()
+        }
+    },[moves,guess])
 
     function checkEndGame(){
         if(moves.length === 6 || timeIsUp){
-            setGameOver(true)
             setMilli(milli - 10000)
+            setGameOver(true)   
         } else if(moves[moves.length-1]=== answer){
+            setMilli(milli + 30000)
+            setWins(wins + 1)
             setGameOver(true)
             setVictory(true)
-            setMilli(milli + 30000)
-        } 
+        }
+    }
+
+    useEffect(function(){
+        (async function (){
+            if(timeIsUp){
+                setSavingSurvivle(true)
+                checkEndGame();
+                await gameStateAPI.saveSurvivle(gameIDs)
+                if(wins){
+                    const profile = await usersAPI.getProfile()
+                    await usersAPI.updateProfile(profile.score + Math.floor((wins/gameCt)*(wins*300)), profile.currency - 1)
+                }
+                setSavingSurvivle(false)
+            }
+        })();
+    },[timeIsUp])
+    function payCoin(){
+        setPaid(true)
+        setIsActive(true)
     }
     function newGame(){
-        //use something else here for a new survivle game
+        setGameIDs([])
+        setWins(0)
+        setGameCt(0)
+        setMilli(300000)
+        setTimeIsUp(false)
+        setPaid(false)
         setIsNewGame(true)
     }
 
@@ -171,25 +220,38 @@ export default function SurvivlePage() {
         <Header title={'Survivle'}/>
         
         <div className="mx-auto w-96 relative pt-100" style={{gridArea:'main', paddingTop:'100px'}}>
-            <div className="flex">{
-                milli>0 && !loading && !showInvalidGuess ? 
-                <div
-                className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black mb-100'>
-                Time Left - {Math.floor((milli/60)/1000)%60}:{(Math.floor(milli/1000)%60).toString().padStart(2,'0')}
-                &nbsp; | &nbsp;
-                guessState: {guess}
-                &nbsp; | &nbsp;
-                movesState: {moves}
-                </div> : ''
-            }
+            <div className="flex">
+                {
+                    milli>0 && !loading && !showInvalidGuess ? 
+                    <div
+                    className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black mb-100'>
+                    Time Left - {Math.floor((milli/60)/1000)%60}:{(Math.floor(milli/1000)%60).toString().padStart(2,'0')}
+                    </div> : ''
+                }
+                {
+                    showInvalidGuess ? 
+                    <div
+                        className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce' >
+                        invalid guess!
+                    </div> : ''
+                }
+            </div>
             {
-                showInvalidGuess ? 
-                <div
-                    className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce' >
-                    invalid guess!
-                </div> : ''
-            }</div>
-            {loading ? 
+                (!paid && coins) ?  (
+                <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
+                    Insert coin_svg to Play
+                    <button onClick={payCoin} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
+                        Insert Coin
+                    </button>
+                </div>) : '' 
+            } 
+            {
+                (!paid && !coins) ?  (
+                <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
+                    You don't have any coin_svg. Go play some wordle!
+                </div>) : '' 
+            } 
+            {loading || savingSurvivle? 
             <div
                 className='absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-0 p-6 w-3/4 mx-auto text-black animate-bounce'>
                     Loading...
@@ -210,13 +272,21 @@ export default function SurvivlePage() {
             </main>
             {<Keyboard addGuessLetter={addGuessLetter} moves={moves} answer={answer}/> }
             {
-                timeIsUp && (
+                (timeIsUp && !savingSurvivle) ?  (
                 <div  className="absolute bg-white rounded border border-gray-500 text-center left-0 right-0 top-1/4 p-6 w-3/4 mx-auto text-black">
-                    {'sometext here'}
+                    {
+                        wins ? 
+                        <div>
+                            You won {wins}/{gameCt} games!<br/>
+                            Netting you {Math.floor((wins/gameCt)*(wins*300))} points!
+                            The last answer was: {answer}
+                        </div>
+                        : "Hmm seems like you didn't reall play. That one's on the house."
+                    }
                     <button onClick={newGame} className='block border rounded border-green-500 bg-green-500 p-2 mt-4 mx-auto shadow'>
                         New Game
                     </button>
-                </div>)
+                </div>) : '' 
             } 
         </div>
         </>

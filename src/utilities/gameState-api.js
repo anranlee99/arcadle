@@ -7,6 +7,10 @@ export function getGameState(gameType){
 }
 
 
+export function saveSurvivle(gameIDs){
+    return sendRequest(`${BASE_URL}/survivle/save`, 'POST', {gameRecord:gameIDs})
+}
+
 export function saveGame(gameType, gameOver, moves, victory){
     return sendRequest(`${BASE_URL}/saveGame`, 'POST', {gameType, gameOver, moves, victory})
 }
