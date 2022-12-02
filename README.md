@@ -1,6 +1,6 @@
 # Arcadle
 
-Hi, I'm Aaron and like the rest of the world, I was swept up in the wordle craze during the pandemic. Sharing the game results with friends on a near daily basis had been a huge source of fun for me. That being said, it was a brief experience that left me wanting more. So, created Arcadle with the goal of a site that gave you reason to spend more time playing wordle. 
+Hi, I'm Aaron and like the rest of the world, I was swept up in the wordle craze during the pandemic. Sharing the game results with friends on a near daily basis had been a huge source of fun for me. That being said, it was a brief experience that left me wanting more. So, I created Arcadle with the goal of a site that gave you reason to spend more time playing wordle. 
 
 ## Game Modes
 
