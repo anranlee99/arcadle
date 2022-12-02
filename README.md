@@ -40,4 +40,5 @@ Gamble is where you can get your big points! You can choose a word with a length
 - React
 - Express
 - Tailwind
+- MongoDB/Mongoose
 
